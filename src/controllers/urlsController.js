@@ -84,3 +84,24 @@ export async function openUrl(req, res) {
     res.status(500).send(err);
   }
 }
+
+export async function deleteUrl(req, res) {
+  const { id } = req.params;
+
+  try {
+    await connection.query(
+        `
+        DELETE FROM
+            urls
+        WHERE
+            id = $1;
+        `,
+      [id]
+    );
+
+    res.sendStatus(204);
+  } catch (err) {
+    console.log(err);
+    res.status(500).send(err);
+  }
+}
