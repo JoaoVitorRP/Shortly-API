@@ -27,3 +27,60 @@ export async function postUrl(req, res) {
     res.status(500).send(err);
   }
 }
+
+export async function getUrl(req, res) {
+  const { id } = req.params;
+
+  try {
+    const url = await connection.query(
+        `
+        SELECT id, "shortUrl", url FROM
+            urls
+        WHERE id = $1;
+        `,
+      [id]
+    );
+
+    if (url.rows.length === 0) return res.status(404).send("Could not find a URL with this id");
+    res.status(200).send(url.rows[0]);
+  } catch (err) {
+    console.log(err);
+    res.status(500).send(err);
+  }
+}
+
+export async function openUrl(req, res) {
+  const { shortUrl } = req.params;
+
+  try {
+    const urlInfo = await connection.query(
+        `
+        SELECT id, url FROM
+            urls
+        WHERE
+            "shortUrl" = $1;
+        `,
+      [shortUrl]
+    );
+
+    if (urlInfo.rows.length === 0) return res.status(404).send("Could not find this url");
+
+    const urlId = urlInfo.rows[0].id;
+
+    await connection.query(
+        `
+        UPDATE
+            urls
+        SET
+            "visitCount" = "visitCount" + 1
+        WHERE
+            id = $1;
+        `,
+      [urlId]
+    );
+
+    res.redirect(urlInfo.rows[0].url);
+  } catch (err) {
+    res.status(500).send(err);
+  }
+}
