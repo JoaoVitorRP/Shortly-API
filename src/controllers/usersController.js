@@ -63,11 +63,10 @@ export async function getRanking(req, res) {
             "visitCount" DESC, "linksCount" DESC, users.id ASC
         LIMIT 10;
         `
-    )
+    );
 
     res.status(200).send(ranking.rows);
   } catch (err) {
-    console.log(err);
     res.status(500).send(err);
   }
 }
