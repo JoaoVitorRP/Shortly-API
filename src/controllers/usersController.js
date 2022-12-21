@@ -8,7 +8,7 @@ export async function getUser(req, res) {
         `
         SELECT
             users.id, users.name,
-            SUM(urls."visitCount") AS "visitCount",
+            COALESCE(SUM(urls."visitCount"), 0) AS "visitCount",
             ( 
                 SELECT 
                     json_agg("urlRows")
@@ -19,8 +19,7 @@ export async function getUser(req, res) {
                         urls ur
                     WHERE
                         ur."createdBy" = $1
-                )
-                AS "urlRows"
+                ) AS "urlRows"
             ) AS "shortenedUrls"
         FROM
             users
@@ -40,6 +39,35 @@ export async function getUser(req, res) {
 
     res.status(200).send(userInfo.rows[0]);
   } catch (err) {
+    res.status(500).send(err);
+  }
+}
+
+export async function getRanking(req, res) {
+  try {
+    const ranking = await connection.query(
+        `
+        SELECT
+            users.id, users.name,
+            COUNT(urls."createdBy") AS "linksCount",
+            COALESCE(SUM(urls."visitCount"), 0) AS "visitCount"
+        FROM
+            users
+        LEFT JOIN
+            urls
+        ON
+            users.id = urls."createdBy"
+        GROUP BY
+            users.id
+        ORDER BY
+            "visitCount" DESC, "linksCount" DESC, users.id ASC
+        LIMIT 10;
+        `
+    )
+
+    res.status(200).send(ranking.rows);
+  } catch (err) {
+    console.log(err);
     res.status(500).send(err);
   }
 }
