@@ -19,7 +19,6 @@ export async function urlDeleteValidation(req, res, next) {
 
     if (urlInfo.rows[0].createdBy !== userId) return res.status(401).send("This url does not belong to the user");
   } catch (err) {
-    console.log(err);
     return res.status(500).send(err);
   }
 
