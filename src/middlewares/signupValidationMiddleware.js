@@ -1,6 +1,6 @@
-import { connection } from "../database/db.js";
 import { signupSchema } from "../schemas/signupSchema.js";
 import bcrypt from "bcrypt";
+import { usersRepository } from "../repositories/usersRepository.js";
 
 export async function signupValidation(req, res, next) {
   const { email, password, confirmPassword } = req.body;
@@ -14,8 +14,9 @@ export async function signupValidation(req, res, next) {
   res.locals.hashPassword = bcrypt.hashSync(password, 10);
 
   try {
-    const userWithThisEmail = await connection.query(`SELECT * FROM users WHERE email = '${email}'`);
-    if (userWithThisEmail.rows.length > 0) return res.sendStatus(409);
+    const userWithThisEmail = await usersRepository.getUserWithThisEmail(email);
+
+    if (userWithThisEmail) return res.sendStatus(409);
   } catch (err) {
     return res.status(500).send(err);
   }
